@@ -1,0 +1,37 @@
+name: Deploy DayPilot to Hostinger
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql,curl,openssl,mbstring
+      - name: Install production dependencies
+        run: composer install --no-dev --no-interaction --prefer-dist --no-progress
+      - name: Validate PHP
+        shell: bash
+        run: find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
+      - name: Deploy via FTPS
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          server-dir: ${{ secrets.FTP_SERVER_DIR }}
+          exclude: |
+            **/.git*/**
+            **/.github/**
+            **/.env
+            config.php
+            config.local.php
+            docker-compose.yml
+            Dockerfile
+            database.sql
+            tests/**
