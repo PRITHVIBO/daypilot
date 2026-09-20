@@ -202,9 +202,9 @@ function gemini_tools(): array {
         ['type'=>'function','name'=>'create_task','description'=>'Create a personal work task.','parameters'=>['type'=>'object','properties'=>[
             'title'=>['type'=>'string','description'=>'Clear task title'],
             'priority'=>['type'=>'string','enum'=>$taskEnum],
-            'due_at'=>['type'=>['string','null'],'description'=>'ISO date/time if a deadline is known'],
-            'estimated_minutes'=>['type'=>['integer','null'],'description'=>'Estimated effort in minutes'],
-            'description'=>['type'=>['string','null'],'description'=>'Optional task details']
+            'due_at'=>['type'=>'string','nullable'=>true,'description'=>'ISO date/time if a deadline is known'],
+            'estimated_minutes'=>['type'=>'integer','nullable'=>true,'description'=>'Estimated effort in minutes'],
+            'description'=>['type'=>'string','nullable'=>true,'description'=>'Optional task details']
         ],'required'=>['title','priority']]],
         ['type'=>'function','name'=>'list_tasks','description'=>'List the user’s current tasks.','parameters'=>['type'=>'object','properties'=>[
             'status'=>['type'=>'string','enum'=>['open','done','all']], 'limit'=>['type'=>'integer','minimum'=>1,'maximum'=>50]
@@ -214,11 +214,11 @@ function gemini_tools(): array {
             'task_id'=>['type'=>'string'], 'start_at'=>['type'=>'string'], 'end_at'=>['type'=>'string']
         ],'required'=>['task_id','start_at','end_at']]],
         ['type'=>'function','name'=>'create_event','description'=>'Create a local calendar event.','parameters'=>['type'=>'object','properties'=>[
-            'title'=>['type'=>'string'], 'start_at'=>['type'=>'string'], 'end_at'=>['type'=>'string'], 'description'=>['type'=>['string','null']], 'location'=>['type'=>['string','null']]
+            'title'=>['type'=>'string'], 'start_at'=>['type'=>'string'], 'end_at'=>['type'=>'string'], 'description'=>['type'=>'string','nullable'=>true], 'location'=>['type'=>'string','nullable'=>true]
         ],'required'=>['title','start_at','end_at']]],
         ['type'=>'function','name'=>'plan_today','description'=>'Build an optimized focus plan for the given date.','parameters'=>['type'=>'object','properties'=>['date'=>['type'=>'string','description'=>'YYYY-MM-DD']],'required'=>['date']]],
         ['type'=>'function','name'=>'get_analytics','description'=>'Get a concise work analytics summary.','parameters'=>['type'=>'object','properties'=>[]]],
-        ['type'=>'function','name'=>'create_note','description'=>'Create a note in the user workspace.','parameters'=>['type'=>'object','properties'=>['title'=>['type'=>'string'],'content'=>['type'=>'string'],'tags'=>['type'=>['string','null']]],'required'=>['title','content']]],
+        ['type'=>'function','name'=>'create_note','description'=>'Create a note in the user workspace.','parameters'=>['type'=>'object','properties'=>['title'=>['type'=>'string'],'content'=>['type'=>'string'],'tags'=>['type'=>'string','nullable'=>true]],'required'=>['title','content']]],
     ];
 }
 
@@ -265,18 +265,19 @@ function gemini_chat(string $message, array $u): array {
     $system = "You are DayPilot, a practical personal work assistant. Be concise, specific and action-oriented. You have tools that can change the user's workspace. Use tools for task/calendar/plan operations instead of pretending. Never claim an action succeeded unless the tool result says it succeeded. For risky external actions (email sending, destructive deletion) there are no tools, so never imply you sent something. Use the user's timezone. Break vague work into sensible steps. Current workspace context: {$context}";
     $pdo=db(); $st=$pdo->prepare('SELECT id,gemini_interaction_id FROM ai_threads WHERE user_id=?');$st->execute([$u['id']]);$thread=$st->fetch();
     $tools=gemini_tools();
-    $input=[['type'=>'user_input','content'=>[['type'=>'text','text'=>$system."\n\nUser request: ".$message]]]];
+    $input=[['type'=>'user_input','content'=>[['type'=>'text','text'=>$message]]]];
     $previous=$thread['gemini_interaction_id']??null; $actions=[]; $lastText='';
     for ($round=0;$round<4;$round++) {
         $body = [
-    'model' => $model,
-    'input' => $input,
-    'tools' => $tools
-];
+            'model' => $model,
+            'system_instruction' => $system,
+            'input' => $input,
+            'tools' => $tools
+        ];
 
-if ($previous) {
-    $body['previous_interaction_id'] = $previous;
-}
+        if ($previous) {
+            $body['previous_interaction_id'] = $previous;
+        }
         $resp=http_json('https://generativelanguage.googleapis.com/v1beta/interactions',["Content-Type: application/json","x-goog-api-key: {$key}"],$body,60);
         $previous=(string)($resp['id']??$previous);
         $functionResults=[]; $hasCall=false;
