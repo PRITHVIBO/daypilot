@@ -17,15 +17,15 @@ jobs:
       - name: Validate PHP
         shell: bash
         run: find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
-      - name: Deploy via FTPS
+      - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
-          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          server: 145.79.213.98
           username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-          protocol: ftps
+          protocol: ftp
           port: 21
-          server-dir: ${{ secrets.FTP_SERVER_DIR }}
+          server-dir: /public_html/
           exclude: |
             **/.git*/**
             **/.github/**
