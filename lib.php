@@ -268,8 +268,15 @@ function gemini_chat(string $message, array $u): array {
     $input=[['type'=>'user_input','content'=>[['type'=>'text','text'=>$system."\n\nUser request: ".$message]]]];
     $previous=$thread['gemini_interaction_id']??null; $actions=[]; $lastText='';
     for ($round=0;$round<4;$round++) {
-        $body=['model'=>$model,'input'=>$input,'tools'=>$tools];
-        if ($previous) { $body['previous_interaction_id']=$previous; unset($body['model']); }
+        $body = [
+    'model' => $model,
+    'input' => $input,
+    'tools' => $tools
+];
+
+if ($previous) {
+    $body['previous_interaction_id'] = $previous;
+}
         $resp=http_json('https://generativelanguage.googleapis.com/v1beta/interactions',["Content-Type: application/json","x-goog-api-key: {$key}"],$body,60);
         $previous=(string)($resp['id']??$previous);
         $functionResults=[]; $hasCall=false;
