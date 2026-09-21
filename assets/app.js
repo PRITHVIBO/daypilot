@@ -27,7 +27,7 @@ function uuid(){ return crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx
 
 async function initDB(){
   state.db = await new Promise((resolve,reject)=>{
-    const req=indexedDB.open('daypilot-local',1);
+    const req=indexedDB.open(`daypilot-local-${state.user.id}`, 1);
     req.onupgradeneeded=()=>{ const db=req.result; if(!db.objectStoreNames.contains('tasks')) db.createObjectStore('tasks',{keyPath:'id'}); if(!db.objectStoreNames.contains('events')) db.createObjectStore('events',{keyPath:'id'}); if(!db.objectStoreNames.contains('notes')) db.createObjectStore('notes',{keyPath:'id'}); if(!db.objectStoreNames.contains('outbox')) db.createObjectStore('outbox',{keyPath:'op_id'}); if(!db.objectStoreNames.contains('meta')) db.createObjectStore('meta',{keyPath:'key'}); };
     req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error);
   });
