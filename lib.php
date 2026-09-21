@@ -202,9 +202,20 @@ function gemini_tools(): array {
         ['type'=>'function','name'=>'create_task','description'=>'Create a personal work task.','parameters'=>['type'=>'object','properties'=>[
             'title'=>['type'=>'string','description'=>'Clear task title'],
             'priority'=>['type'=>'string','enum'=>$taskEnum],
-            'due_at'=>['type'=>'string','nullable'=>true,'description'=>'ISO date/time if a deadline is known'],
-            'estimated_minutes'=>['type'=>'integer','nullable'=>true,'description'=>'Estimated effort in minutes'],
-            'description'=>['type'=>'string','nullable'=>true,'description'=>'Optional task details']
+            'due_at'=>[
+    'type'=>'string',
+    'description'=>'ISO date/time if a deadline is known'
+],
+
+'estimated_minutes'=>[
+    'type'=>'integer',
+    'description'=>'Estimated effort in minutes'
+],
+
+'description'=>[
+    'type'=>'string',
+    'description'=>'Optional task details'
+]
         ],'required'=>['title','priority']]],
         ['type'=>'function','name'=>'list_tasks','description'=>'List the user’s current tasks.','parameters'=>['type'=>'object','properties'=>[
             'status'=>['type'=>'string','enum'=>['open','done','all']], 'limit'=>['type'=>'integer','minimum'=>1,'maximum'=>50]
